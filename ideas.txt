@@ -1,0 +1,129 @@
+QUESTIONS
+
+* should subsystems 
+   A) all get a handle to an operator interface? or
+   B) stay simple and have their state asserted?
+   
+con for A: all systems get all inputs, but perhaps dont use them all
+pro for A: all stuff concerning a subsystem is in one place
+pro for B: it will tend to keep methods in subsystem unit testable 
+   without mocking operator input
+pro for A: eliminates state flags for the most part
+pro for B: all code reading inputs is in one place
+
+* picocontainer to inject/wire deps? 
+
+* class BaseNavigation
+    getRobotPose()
+
+* class Navigation extends BaseNavigation
+    getRobotPose()
+    acceptVisionData()
+    
+
+* class RobotSystem
+  BaseSubsystem(  Navigation,  Name, LogFactory  )
+
+  abstract RobotInit(RobotPreferences, TimeSource)
+  abstract AutoInit(RobotGameData)
+  abstract TeleopInit()
+  abstract TestInit()
+  abstract DisabledInit()
+  
+  abstract TeleopPeriodic( OperatorInput)
+  abstract AutoPeriodic(RobotPose)
+  abstract DisabledPeriodic()
+  abstract TestPeriodic( OperatorInput)
+
+  protected timer
+  protected logger
+  protected preferences
+  trap subsystem exceptions
+  settings/prefs object??
+
+  contstructor idea
+      
+
+* should trap exceptions from subclasses/impls
+* separate package from adapters
+   --> ONLY ROBOT or pico container should be constructing adapters!
+   --> NO references from code to wpilib stuff directly!
+   --> how do you do old-school macker rules to prevent calls from sub packages
+     to wpilib?
+
+* components
+   * button builder
+   * robotPose
+   * navigationfactory
+   * robotmap: one is good
+   * operator interface
+   * object that represents OI state
+   * input panel source
+   * drive input source
+   * base drivesubsystem that uses filters for drive input
+   * drive filters are a thing
+       --> drive subsystem should 
+   * preferences ( optionally load from RobotPreferences 
+
+* built-in timing and stats for functions  
+   * periodic
+   * init
+
+* logger with smart dash/logging
+
+* adapters
+our adapters should always have an invert()
+
+  * subsystem -> our subsystem
+  * timer -> our timer but wpilib timer at runtime
+  * logging -> their logging
+  * solenoid  --> theirs
+  * motor control
+  * drive --> robotdrivebase
+
+* talon settings is good
+
+* drive input is good
+* talonsettings is good
+
+* testing points:
+   * test filters
+   * test subystems by providing direct input and timer input
+   * assert output of solenoids and motors
+      --> solenoid: state
+      --> motor: speed
+      --> dio: state
+      --> drive: subclass of their drive?
+
+* a lot of strongback code is a good start github.com/strongback
+package structure:
+
+  frc
+     logging
+        metrics
+        logging
+     robot
+     adapter
+     controller
+     util
+     navigation
+     hardware
+        solenoid
+        motor
+        pdp
+        dio
+
+     oi
+     subsystems
+        drive
+        talonsettings
+  
+layering rules
+   only frc.adapter -> edu.first.wpilib.*
+   only frc.robot -> frc.adapter.*
+   only frc.robot -> frc.oi.*
+   only frc.robot -> frc.subsystems
+   only frc.subsystem, frc.robot -> frc.navigation
+   only frc.subsystem -> frc.controller
+   only frc.subsystem, frc.robot -> frc.hardware ( depends on how we do DI and what kind of ref) 
+   anybody -> frc.logging, frc.util
